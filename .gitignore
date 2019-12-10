@@ -1,0 +1,16 @@
+data/**
+*.csv
+*.json
+results/**
+*.jpeg
+*.png
+*.gif
+*.jpg
+*.zip
+*.gzip
+.DS_Store
+*.DS_Store
+*.idea
+.idea
+**/.idea
+**/*.idea
