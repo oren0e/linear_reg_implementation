@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # 1. Minimize the function (x + 5)^2
 cur_x = 3
@@ -31,21 +30,115 @@ plt.xlabel('X')
 plt.ylabel('y')
 plt.show()
 
-def loss(X, beta, y):
-    n = len(y)
-    h = np.dot(X, beta)
-    return (1/2*n) * np.sum(np.square(h - y))
 
-def gradient(X, beta, y):
-    n = len(y)
-    h = np.dot(X, beta)
-    return 1/n * np.sum((X.T).dot(h - y))
+class CustomLinearRegression:
 
-# def estimate(X, y, rate=0.001, precision=0.000001, max_iters=10000):
+    def __init__(self, seed):
+        import random
+        random.seed(seed)
+
+    @staticmethod
+    def loss(X, beta, y):
+        """
+        Computes the loss function (MSE) for a given X matrix, beta vector and y vector
+        """
+        n = len(y)
+        h = np.dot(X, beta)
+        return (1/2*n) * np.sum(np.square(h - y))
+
+    @staticmethod
+    def gradient(X, beta, y):
+        """
+        Computes the gradient of the loss function
+        """
+        n = len(y)
+        h = np.dot(X, beta)
+        return 1/n * np.sum((X.T).dot(h - y))
+
+    def fit(self, X, y, rate=0.001, precision=0.0000001, max_iters=10000, verbose=False):
+        """
+        Description:
+            Fits a linear regression using gradient descent.
+            Will keep trying to get to the optimum as long as the absolute difference between two consecutive iterations
+            is bigger than `precision` and number of iterations is less than `max_iters`
+
+        Parameters:
+            X (ndarray)
+            y (ndarray)
+            rate (float): The learning rate
+            precision (float): The minimal difference between two consecutive beta values
+                               above which the fitting process will continue
+            max_iters (int): The maximum number of iterations
+            verbose (boolean): If True will print the progress of the fitting to the console
+
+        Returns:
+            The found beta vector, array of all the beta vectors from the fitting process, the array of all the loss values
+            (MSE) from the fitting process, and the number of iterations it took to get to the optimum
+        """
+
+        # Initialize parameters
+        cur_beta = np.random.randn(2, 1)
+        self.X_intercept = np.c_[np.ones((len(X), 1)), X]
+        previous_step_size = 1
+
+        self.iters = 0
+        self.beta_array = np.zeros((max_iters, 2))  # for graphing
+        self.loss_array = np.zeros(max_iters)       # for graphing
+
+        while (previous_step_size > precision) & (self.iters < max_iters):
+            prev_beta = cur_beta
+            cur_beta = cur_beta - rate * self.gradient(self.X_intercept, cur_beta, y)
+            previous_step_size = abs(cur_beta[1] - prev_beta[1])
+            self.iters += 1
+
+            self.beta_array[self.iters, :] = cur_beta.T
+            self.loss_array[self.iters] = self.loss(self.X_intercept, cur_beta, y)
+
+            if verbose:
+                print("\nIteration ", self.iters, "\nBeta0: ", self.cur_beta[0][0], " Beta1: ", self.cur_beta[1][0])
+
+        return cur_beta
+
+    def plot_loss(self, style):
+        """
+        Plots the progression of the loss function.
+        Style is matplotlib notation for color and linestyle.
+        """
+        fig, ax = plt.subplots()
+        ax.set_ylabel('Loss')
+        ax.set_xlabel('Iterations')
+        ax.plot(range(1,self.iters), self.loss_array[1:self.iters], style)
+        plt.show()
+
+    def plot_fit(self, x, y, data_style='b.', fit_style='r-', alpha=0.08):
+        """
+        Plots the fitted lines from the process of getting to the optimum
+        """
+        fig, ax = plt.subplots(sharey=True)
+        ax.plot(x, y, data_style)
+        ax.set_xlabel("$x_1$")
+        ax.set_ylabel("$y$")
+        for i in range(1, self.iters):
+            ax.plot(x, np.dot(self.X_intercept, self.beta_array[i]), fit_style, alpha=alpha)
+        plt.show()
 
 
 
-cur_beta = np.random.randn(2,1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cur_beta = np.random.randn(2,1)*0.5
 X_intercept = np.c_[np.ones((len(X),1)), X]
 rate = 0.001
 precision = 0.000001
