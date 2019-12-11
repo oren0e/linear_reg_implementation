@@ -33,12 +33,12 @@ plt.show()
 
 class CustomLinearRegression:
 
-    def __init__(self, seed):
-        import random
-        random.seed(seed)
+    def __init__(self, seed=1234):
+        import numpy as np
+        np.random.seed(seed)
 
     @staticmethod
-    def loss(X, beta, y):
+    def __loss(X, beta, y):
         """
         Computes the loss function (MSE) for a given X matrix, beta vector and y vector
         """
@@ -47,7 +47,7 @@ class CustomLinearRegression:
         return (1/2*n) * np.sum(np.square(h - y))
 
     @staticmethod
-    def gradient(X, beta, y):
+    def __gradient(X, beta, y):
         """
         Computes the gradient of the loss function
         """
@@ -55,7 +55,7 @@ class CustomLinearRegression:
         h = np.dot(X, beta)
         return 1/n * np.sum((X.T).dot(h - y))
 
-    def fit(self, X, y, rate=0.001, precision=0.0000001, max_iters=10000, verbose=False):
+    def fit(self, x, y, rate=0.001, precision=0.0000001, max_iters=10000, verbose=False):
         """
         Description:
             Fits a linear regression using gradient descent.
@@ -78,54 +78,55 @@ class CustomLinearRegression:
 
         # Initialize parameters
         cur_beta = np.random.randn(2, 1)
-        self.X_intercept = np.c_[np.ones((len(X), 1)), X]
+        self.__X_intercept = np.c_[np.ones((len(x), 1)), x]
         previous_step_size = 1
 
-        self.iters = 0
-        self.beta_array = np.zeros((max_iters, 2))  # for graphing
-        self.loss_array = np.zeros(max_iters)       # for graphing
+        self.__iters = 0
+        self.__beta_array = np.zeros((max_iters, 2))  # for graphing
+        self.__loss_array = np.zeros(max_iters)       # for graphing
 
-        while (previous_step_size > precision) & (self.iters < max_iters):
+        while (previous_step_size > precision) & (self.__iters < max_iters):
             prev_beta = cur_beta
-            cur_beta = cur_beta - rate * self.gradient(self.X_intercept, cur_beta, y)
+            cur_beta = cur_beta - rate * self.__gradient(self.__X_intercept, cur_beta, y)
             previous_step_size = abs(cur_beta[1] - prev_beta[1])
-            self.iters += 1
+            self.__iters += 1
 
-            self.beta_array[self.iters, :] = cur_beta.T
-            self.loss_array[self.iters] = self.loss(self.X_intercept, cur_beta, y)
+            self.__beta_array[self.__iters, :] = cur_beta.T
+            self.__loss_array[self.__iters] = self.__loss(self.__X_intercept, cur_beta, y)
 
             if verbose:
-                print("\nIteration ", self.iters, "\nBeta0: ", self.cur_beta[0][0], " Beta1: ", self.cur_beta[1][0])
+                print("\nIteration ", self.__iters, "\nBeta0: ", cur_beta[0][0], " Beta1: ", cur_beta[1][0])
 
         return cur_beta
 
-    def plot_loss(self, style):
+    def plot_loss(self, style='b.'):
         """
         Plots the progression of the loss function.
         Style is matplotlib notation for color and linestyle.
         """
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10,6))
         ax.set_ylabel('Loss')
         ax.set_xlabel('Iterations')
-        ax.plot(range(1,self.iters), self.loss_array[1:self.iters], style)
+        ax.plot(range(1,self.__iters), self.__loss_array[1:self.__iters], style)
         plt.show()
 
     def plot_fit(self, x, y, data_style='b.', fit_style='r-', alpha=0.08):
         """
         Plots the fitted lines from the process of getting to the optimum
         """
-        fig, ax = plt.subplots(sharey=True)
+        import tqdm  # for progress bar, because it is kind of slow.
+        fig, ax = plt.subplots(sharey=True, figsize=(10,6))
         ax.plot(x, y, data_style)
         ax.set_xlabel("$x_1$")
         ax.set_ylabel("$y$")
-        for i in range(1, self.iters):
-            ax.plot(x, np.dot(self.X_intercept, self.beta_array[i]), fit_style, alpha=alpha)
+        for i in tqdm.tqdm(range(1, self.__iters)):
+            ax.plot(x, np.dot(self.__X_intercept, self.__beta_array[i]), fit_style, alpha=alpha)
         plt.show()
 
-
-
-
-
+model = CustomLinearRegression(seed=1203)
+model.fit(x=X, y=y, verbose=True)
+model.plot_loss()
+model.plot_fit(X,y)
 
 
 
